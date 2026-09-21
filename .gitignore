@@ -1,0 +1,6 @@
+# Dependencies and local metadata
+node_modules/
+.DS_Store
+# Local Pi runtime state
+.atl/
+.pi/

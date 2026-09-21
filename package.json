@@ -1,0 +1,58 @@
+{
+  "name": "pi-session-orchestrator",
+  "version": "0.2.0",
+  "type": "module",
+  "description": "Explicit, durable coordinator and focused-session state for Pi",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davidjadczyk/pi-session-orchestrator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/davidjadczyk/pi-session-orchestrator/issues"
+  },
+  "homepage": "https://github.com/davidjadczyk/pi-session-orchestrator",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "keywords": [
+    "pi",
+    "pi-extension",
+    "pi-package",
+    "orchestration",
+    "session-coordination"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE",
+    "assets/pi-session-orchestrator-thumbnail-pi-sessions.png",
+    "docs/"
+  ],
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ],
+    "image": "https://raw.githubusercontent.com/davidjadczyk/pi-session-orchestrator/main/assets/pi-session-orchestrator-thumbnail-pi-sessions.png"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "test": "node --test --import tsx test/*.test.ts",
+    "verify-pack": "node scripts/verify-pack.mjs"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "0.85.1",
+    "@types/node": "22.10.10",
+    "tsx": "4.19.2",
+    "typebox": "1.3.7",
+    "typescript": "5.7.3"
+  }
+}

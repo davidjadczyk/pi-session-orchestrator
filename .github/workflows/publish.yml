@@ -1,0 +1,81 @@
+name: Publish package
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: >-
+          Exact vSemVer annotated tag to publish (for example, v0.2.0)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out protected main
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22.19.0
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - name: Use npm trusted publishing support
+        run: npm install --global npm@11.5.1
+      - name: Verify release tag and remote main
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          semver_re='^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
+          if [[ ! "$RELEASE_TAG" =~ $semver_re ]]; then
+            echo "release input must be an exact vSemVer tag: $RELEASE_TAG" >&2
+            exit 1
+          fi
+          git fetch --no-tags origin \
+            "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}" \
+            "refs/heads/main:refs/remotes/origin/main"
+          if [[ "$(git cat-file -t \
+            "refs/tags/${RELEASE_TAG}")" != "tag" ]]; then
+            echo "release tag must be annotated: $RELEASE_TAG" >&2
+            exit 1
+          fi
+          tag_commit="$(git rev-parse "refs/tags/${RELEASE_TAG}^{commit}")"
+          main_commit="$(git rev-parse refs/remotes/origin/main)"
+          head_commit="$(git rev-parse HEAD)"
+          if [[ "$tag_commit" != "$main_commit" || \
+            "$head_commit" != "$main_commit" ]]; then
+            echo "annotated tag, checked-out main, and remote main must" \
+              "point to the same commit" >&2
+            exit 1
+          fi
+          package_version="$(node -p "require('./package.json').version")"
+          if [[ "$RELEASE_TAG" != "v${package_version}" ]]; then
+            echo "tag $RELEASE_TAG does not match package version" \
+              "$package_version" >&2
+            exit 1
+          fi
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Verify package files
+        run: npm run verify-pack
+      - name: Verify package dry run
+        run: npm pack --dry-run --json --ignore-scripts
+      - name: Publish to npm with OIDC provenance
+        run: >-
+          npm publish --provenance --access public
+          --registry=https://registry.npmjs.org

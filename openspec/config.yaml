@@ -1,0 +1,39 @@
+project:
+  name: pi-session-orchestrator
+  context: TypeScript ESM Pi extension package
+  entrypoint: src/index.ts
+  package_manager: npm
+  package_name: pi-session-orchestrator
+  future_license: MIT
+
+sdd:
+  artifact_store: openspec
+  strict_tdd: true
+  phase_rules:
+    init: >-
+      establish repository context and testing commands without changing
+      source behavior
+    proposal: define scope and acceptance criteria before implementation
+    design: document architecture decisions for approved changes
+    tasks: decompose approved work into test-first implementation tasks
+    verify: run the configured tests and type validation
+    archive: retain completed SDD artifacts and verification evidence
+
+testing:
+  runner: node:test via npm test
+  typecheck: npm run build
+  commands:
+    test: npm test
+    build: npm run build
+
+constraints:
+  allowed_edit_surfaces:
+    - openspec/**
+  do_not_modify:
+    - source behavior
+    - package publication metadata
+    - CI
+    - license
+    - README
+    - contributor documentation
+    - release configuration

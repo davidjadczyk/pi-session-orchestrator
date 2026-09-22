@@ -158,6 +158,53 @@ test("publish workflow is main-bound, tag-safe, and tokenless", () => {
   assert.ok(workflow.indexOf("npm pack --dry-run") < workflow.indexOf("npm publish"));
 });
 
+test("bootstrap workflow is temporary, main-bound, tag-safe, and credential-scoped", () => {
+  const workflow = read(".github/workflows/publish-bootstrap.yml");
+  assert.match(workflow, /TEMPORARY FIRST-RELEASE BOOTSTRAP/);
+  assert.match(workflow, /^on:\n  workflow_dispatch:/m);
+  assert.doesNotMatch(workflow, /^(?:  )?(?:push|pull_request):/m);
+  assert.match(workflow, /description: Exact release tag; this bootstrap accepts only v0\.2\.0/);
+  assert.match(workflow, /required: true/);
+  assert.match(workflow, /if: github\.ref == 'refs\/heads\/main'/);
+  assert.match(workflow, /^permissions:\n  contents: read\n  id-token: write$/m);
+  assert.match(workflow, /RELEASE_TAG.*v0\.2\.0/);
+  assert.match(workflow, /git cat-file -t/);
+  assert.match(workflow, /refs\/remotes\/origin\/main/);
+  assert.match(workflow, /tag_commit/);
+  assert.match(workflow, /main_commit/);
+  assert.match(workflow, /head_commit/);
+  assert.match(workflow, /package_version/);
+  assert.match(workflow, /package_version.*0\.2\.0/);
+  assert.match(workflow, /registry-url: https:\/\/registry\.npmjs\.org/);
+  assert.match(workflow, /--registry=https:\/\/registry\.npmjs\.org/);
+  assert.match(workflow, /npm publish --provenance --access public/);
+  assert.equal((workflow.match(/\$\{\{ secrets\.NPM_BOOTSTRAP_TOKEN \}\}/g) ?? []).length, 1);
+  assert.equal((workflow.match(/secrets\./g) ?? []).length, 1);
+  assert.match(workflow, /NODE_AUTH_TOKEN: \$\{\{ secrets\.NPM_BOOTSTRAP_TOKEN \}\}/);
+  assert.doesNotMatch(workflow, /NPM_TOKEN|npm token|_authToken/);
+  const releaseSkill = read(".pi/skills/create-release/SKILL.md");
+  assert.match(releaseSkill, /^name: create-release$/m);
+  assert.match(releaseSkill, /Never publish locally/);
+  for (const path of ["AGENTS.md", "odd/tasks/first-release-bootstrap.md"]) {
+    const guidance = read(path);
+    assert.doesNotMatch(guidance, /NPM_BOOTSTRAP_TOKEN|NPM_TOKEN|NODE_AUTH_TOKEN|\.npmrc|npm token|_authToken|npm config set/i);
+  }
+  assert.doesNotMatch(releaseSkill, /NPM_BOOTSTRAP_TOKEN|NPM_TOKEN|NODE_AUTH_TOKEN|\.npmrc|npm token|_authToken|npm config set/i);
+  for (const command of ["npm ci", "npm test", "npm run build", "npm run verify-pack", "npm pack --dry-run --json --ignore-scripts", "npm publish --provenance"]) {
+    assert.ok(workflow.includes(command), `bootstrap workflow must run ${command}`);
+  }
+  assert.ok(workflow.indexOf("npm ci") < workflow.indexOf("npm test"));
+  assert.ok(workflow.indexOf("npm test") < workflow.indexOf("npm run build"));
+  assert.ok(workflow.indexOf("npm run build") < workflow.indexOf("npm run verify-pack"));
+  assert.ok(workflow.indexOf("npm run verify-pack") < workflow.indexOf("npm pack --dry-run"));
+  assert.ok(workflow.indexOf("npm pack --dry-run") < workflow.indexOf("npm publish --provenance"));
+
+  const permanentWorkflow = read(".github/workflows/publish.yml");
+  assert.doesNotMatch(permanentWorkflow, /NPM_TOKEN|NPM_BOOTSTRAP_TOKEN|NODE_AUTH_TOKEN|secrets\.|npm token/);
+  assert.match(permanentWorkflow, /npm publish --provenance/);
+  assert.match(permanentWorkflow, /registry=https:\/\/registry\.npmjs\.org/);
+});
+
 test("workflow is local validation only and keeps checks ordered", () => {
   const workflow = read(".github/workflows/ci.yml");
   assert.match(workflow, /push:/);

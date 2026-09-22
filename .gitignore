@@ -3,4 +3,9 @@ node_modules/
 .DS_Store
 # Local Pi runtime state
 .atl/
-.pi/
+.pi/*
+!.pi/skills/
+.pi/skills/*
+!.pi/skills/create-release/
+.pi/skills/create-release/*
+!.pi/skills/create-release/SKILL.md

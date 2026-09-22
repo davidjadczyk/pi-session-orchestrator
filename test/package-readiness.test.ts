@@ -182,10 +182,14 @@ test("bootstrap workflow is temporary, main-bound, tag-safe, and credential-scop
   assert.equal((workflow.match(/secrets\./g) ?? []).length, 1);
   assert.match(workflow, /NODE_AUTH_TOKEN: \$\{\{ secrets\.NPM_BOOTSTRAP_TOKEN \}\}/);
   assert.doesNotMatch(workflow, /NPM_TOKEN|npm token|_authToken/);
-  for (const path of ["AGENTS.md", ".pi/skills/create-release/SKILL.md", "odd/tasks/first-release-bootstrap.md"]) {
+  const releaseSkill = read(".pi/skills/create-release/SKILL.md");
+  assert.match(releaseSkill, /^name: create-release$/m);
+  assert.match(releaseSkill, /Never publish locally/);
+  for (const path of ["AGENTS.md", "odd/tasks/first-release-bootstrap.md"]) {
     const guidance = read(path);
     assert.doesNotMatch(guidance, /NPM_BOOTSTRAP_TOKEN|NPM_TOKEN|NODE_AUTH_TOKEN|\.npmrc|npm token|_authToken|npm config set/i);
   }
+  assert.doesNotMatch(releaseSkill, /NPM_BOOTSTRAP_TOKEN|NPM_TOKEN|NODE_AUTH_TOKEN|\.npmrc|npm token|_authToken|npm config set/i);
   for (const command of ["npm ci", "npm test", "npm run build", "npm run verify-pack", "npm pack --dry-run --json --ignore-scripts", "npm publish --provenance"]) {
     assert.ok(workflow.includes(command), `bootstrap workflow must run ${command}`);
   }

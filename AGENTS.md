@@ -16,8 +16,9 @@
   upstream mutation, publication, tags, releases, or workflow dispatch.
 - `pi-session-orchestrator@0.2.0` is published. The permanent release route is
   `.github/workflows/publish.yml`: it is manually dispatched from protected `main`,
-  uses an annotated version tag, and publishes publicly with npm OIDC/provenance
-  and no token.
+  uses an annotated version tag, targets the GitHub Actions `npm` environment so
+  releases appear as deployments, and publishes publicly with npm
+  OIDC/provenance and no token.
 - Never publish to npm locally. Do not put npm credentials, tokens, token-bearing
   configuration, or secrets in repository files. Trusted publishing is configured
   externally for the permanent GitHub Actions workflow.

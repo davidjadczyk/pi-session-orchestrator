@@ -137,11 +137,19 @@ test("publish workflow is main-bound, tag-safe, and tokenless", () => {
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /description:.*vSemVer|Exact vSemVer/);
   assert.match(workflow, /required: true/);
-  assert.match(workflow, /if: github\.ref == 'refs\/heads\/main'/);
+  assert.match(workflow, /if: github\.ref == 'refs\/heads\/main'\n    runs-on: ubuntu-latest\n    environment: npm/);
+  assert.equal(workflow.match(/^    environment: npm$/gm)?.length, 1);
+  assert.match(workflow, /ref: main/);
+  assert.match(workflow, /fetch-depth: 0/);
+  assert.match(workflow, /persist-credentials: false/);
   assert.match(workflow, /^permissions:\n  contents: read\n  id-token: write$/m);
-  assert.match(workflow, /refs\/tags\/\$\{RELEASE_TAG\}/);
+  assert.match(workflow, /semver_re='\^v/);
+  assert.match(workflow, /refs\/tags\/\$\{RELEASE_TAG\}:refs\/tags\/\$\{RELEASE_TAG\}/);
   assert.match(workflow, /git cat-file -t/);
   assert.match(workflow, /refs\/remotes\/origin\/main/);
+  assert.match(workflow, /"\$tag_commit" != "\$main_commit"/);
+  assert.match(workflow, /"\$head_commit" != "\$main_commit"/);
+  assert.match(workflow, /"\$RELEASE_TAG" != "v\$\{package_version\}"/);
   assert.match(workflow, /tag_commit/);
   assert.match(workflow, /main_commit/);
   assert.match(workflow, /package_version/);
@@ -163,7 +171,8 @@ test("bootstrap workflow is absent and permanent release remains trusted and tag
 
   const permanentWorkflow = read(".github/workflows/publish.yml");
   assert.match(permanentWorkflow, /workflow_dispatch:/);
-  assert.match(permanentWorkflow, /if: github\.ref == 'refs\/heads\/main'/);
+  assert.match(permanentWorkflow, /if: github\.ref == 'refs\/heads\/main'\n    runs-on: ubuntu-latest\n    environment: npm/);
+  assert.equal(permanentWorkflow.match(/^    environment: npm$/gm)?.length, 1);
   assert.match(permanentWorkflow, /refs\/tags\/\$\{RELEASE_TAG\}/);
   assert.match(permanentWorkflow, /git cat-file -t/);
   assert.match(permanentWorkflow, /refs\/remotes\/origin\/main/);
@@ -178,6 +187,9 @@ test("bootstrap workflow is absent and permanent release remains trusted and tag
   assert.match(releaseSkill, /permanent OIDC\/provenance workflow/);
   assert.match(releaseSkill, /pi-session-orchestrator@0\.2\.0 is published/);
   assert.match(releaseSkill, /Never publish locally/);
+  assert.match(read("AGENTS.md"), /`npm` environment/);
+  assert.match(releaseSkill, /`npm` environment/);
+  assert.match(read("odd/tasks/first-release-bootstrap.md"), /`npm` environment/);
   for (const path of ["AGENTS.md", "odd/tasks/first-release-bootstrap.md"]) {
     const guidance = read(path);
     assert.doesNotMatch(guidance, /NPM_BOOTSTRAP_TOKEN|NPM_TOKEN|NODE_AUTH_TOKEN|\.npmrc|npm token|_authToken|npm config set/i);

@@ -25,7 +25,8 @@ Load for release preparation, trusted-publishing verification, or permanent rele
 | Either prerequisite is uncertain | Stop and report the missing external evidence. |
 
 `pi-session-orchestrator@0.2.0 is published`. Future releases use only the permanent
-GitHub Actions workflow and its externally configured npm trusted publisher.
+GitHub Actions workflow, its `npm` environment (which records releases as GitHub
+deployments), and its externally configured npm trusted publisher.
 
 ## Execution Steps
 

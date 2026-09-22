@@ -50,6 +50,21 @@ test("Pi runtime packages are peers and remain development-installed", () => {
   assert.equal(lockfile.packages["node_modules/typebox"].dev, true);
 });
 
+test("lockfile and CI install only from the public npm registry", () => {
+  const lockfile = JSON.parse(read("package-lock.json"));
+  for (const [packagePath, packageMetadata] of Object.entries(lockfile.packages) as [string, { resolved?: string }][]) {
+    if (!packageMetadata.resolved) continue;
+    assert.equal(new URL(packageMetadata.resolved).origin, "https://registry.npmjs.org", `${packagePath} must resolve from public npm`);
+  }
+
+  const workflow = read(".github/workflows/ci.yml");
+  const setupNode = workflow.indexOf("uses: actions/setup-node@");
+  const registry = workflow.indexOf("registry-url: https://registry.npmjs.org");
+  assert.ok(setupNode >= 0);
+  assert.ok(setupNode < registry);
+  assert.ok(registry < workflow.indexOf("npm ci"));
+});
+
 test("reference and contributor documents expose stable and exploratory boundaries", () => {
   assert.match(read("CONTRIBUTING.md"), /npm test/);
   assert.match(read("CONTRIBUTING.md"), /npm run build/);
@@ -155,5 +170,5 @@ test("workflow is local validation only and keeps checks ordered", () => {
   assert.match(workflow, /npm ci/);
   assert.ok(workflow.indexOf("npm test") < workflow.indexOf("npm run build"));
   assert.ok(workflow.indexOf("npm run build") < workflow.indexOf("npm run verify-pack"));
-  assert.doesNotMatch(workflow, /publish|npm token|NPM_TOKEN|secrets\.|registry/i);
+  assert.doesNotMatch(workflow, /publish|npm token|NPM_TOKEN|secrets\./i);
 });

@@ -2,32 +2,33 @@
 
 ## Context
 
-`pi-session-orchestrator@0.2.0` is ready on protected `main`, but npm trusted publishing cannot be configured before the package exists. Prepare one temporary GitHub Actions bootstrap path using a narrowly scoped npm publish token, then configure tokenless OIDC trusted publishing for all later releases. Do not publish locally.
+`pi-session-orchestrator@0.2.0` was published through the completed first-release process. npm trusted publishing is configured for `davidjadczyk/pi-session-orchestrator` and the permanent tokenless OIDC/provenance workflow. The permanent publish job targets the GitHub Actions `npm` environment, so releases appear as deployments for auditability. Do not publish locally.
 
 ## Constraints
 
 - Use GitHub Actions only; never run `npm publish` from a local machine.
-- The bootstrap workflow may publish only the exact annotated tag matching `package.json` on current protected `main`.
-- Use a repository secret only in the bootstrap workflow; do not print, commit, or expose it.
-- Remove the bootstrap credential/workflow after npm trusted publishing is configured.
 - Keep the permanent `publish.yml` tokenless and OIDC/provenance-based.
-- Add repository agent guidance and an ignored project-local release skill.
+- The permanent publish job must target the GitHub Actions `npm` environment so releases appear as deployments.
+- The permanent workflow may publish only the exact annotated tag matching `package.json` on current protected `main`.
+- Keep repository agent guidance and the ignored project-local release skill aligned with the permanent release path.
 
 ## Tasks
 
 - [x] ODD-1: Add the guarded one-time bootstrap workflow, release guidance, and regression coverage. Route: dedicated writer. Checks: focused tests, full tests, build, package verification, workflow readback.
-- [ ] ODD-2: Commit and deliver the bootstrap preparation through protected `main`. Route: coordinator. Checks: CI and merge evidence.
-- [ ] ODD-3: Create/push annotated `v0.2.0`, set the bootstrap secret, and dispatch the bootstrap workflow under separate immutable authorization. Route: coordinator. Checks: GitHub run and public npm verification.
-- [ ] ODD-4: Configure npm trusted publishing, remove bootstrap credentials/workflow, and confirm the permanent tokenless release route. Route: coordinator. Checks: package settings and workflow validation.
+- [x] ODD-2: Commit and deliver the release preparation through protected `main`. Route: coordinator. Checks: CI and merge evidence.
+- [x] ODD-3: Create/push annotated `v0.2.0` and publish the package through GitHub Actions under separate immutable authorization. Route: coordinator. Checks: GitHub run and public npm verification.
+- [x] ODD-4: Configure npm trusted publishing, remove the bootstrap workflow source path, and confirm the permanent tokenless release route. Route: coordinator. Checks: package settings and workflow validation.
+- [x] ODD-5: Add the permanent `npm` environment and deployment audit evidence. Route: dedicated writer. Checks: focused readiness tests, full tests, build, package verification, dry-run pack, and workflow readback.
 
 ## Evidence
 
-- Protected `main` is at `51835fedb6d30bca98a133a33aaa17868a8db9b7` and declares version `0.2.0`.
-- No tag or public npm package exists yet.
-- `npm trust github` returns public-registry E404 because trusted-publisher settings are package-scoped and this first package has not been created.
-- The user explicitly authorized the first release and requested future agent release guidance.
-- ODD-1 implementation evidence: `.github/workflows/publish-bootstrap.yml` is manual-dispatch only, main-bound, exact `v0.2.0` annotated-tag and remote-main safe, public-registry-only, and uses the bootstrap secret only at publish runtime; `publish.yml` remains tokenless. `AGENTS.md` and `.pi/skills/create-release/SKILL.md` define source, validation, protected-branch, bootstrap, trusted-publishing, and delivery boundaries. `test/package-readiness.test.ts` statically protects those invariants.
-- ODD-1 validation evidence: focused package-readiness tests passed 11/11; `npm test` passed 49/49; `npm run build` passed; `npm run verify-pack` passed; `npm pack --dry-run --json --ignore-scripts` produced the expected 18-file `pi-session-orchestrator@0.2.0` package; Ruby YAML readback passed for all three workflows.
-- ODD-1 delivery boundary: no secret was read or exposed; no local publish, tag, release, dispatch, remote-setting change, push, PR, stage, or commit was performed. ODD-2 through ODD-4 remain pending external operations.
-- PR #2 CI remediation: GitHub Actions failed because the readiness test reads `.pi/skills/create-release/SKILL.md`, while the broad `.pi/` ignore rule excluded that file from the candidate and the checkout returned `ENOENT`.
-- PR #2 correction: `.gitignore` now continues to ignore Pi runtime/local state and all other `.pi/` content while allowing only the release skill path; package-readiness coverage explicitly validates the skill metadata and delivery guard. The skill is now visible as a candidate file without staging or committing it.
+- Published package: `pi-session-orchestrator@0.2.0`.
+- Release tag: annotated `v0.2.0`, matching package version and protected `main`.
+- Trusted publishing: configured for GitHub repository `davidjadczyk/pi-session-orchestrator` and permanent workflow `.github/workflows/publish.yml`, using tokenless npm OIDC with provenance.
+- Deployment audit: the permanent publish job targets the GitHub Actions `npm` environment, so future releases appear as GitHub deployments.
+- Source cleanup: `.github/workflows/publish-bootstrap.yml` is removed; readiness coverage now requires its absence and protects the permanent workflow's tokenless/tag-safe invariants.
+- Guidance cleanup: `AGENTS.md` and `.pi/skills/create-release/SKILL.md` describe only the permanent release path, its `npm` environment, and deployment visibility while treating `0.2.0` as published.
+- Bootstrap credential state was not changed by this source-only cleanup task, per delivery boundary.
+- Existing ODD-1 validation evidence remains: focused package-readiness tests passed 11/11; `npm test` passed 49/49; `npm run build` passed; `npm run verify-pack` passed; `npm pack --dry-run --json --ignore-scripts` produced the expected 18-file `pi-session-orchestrator@0.2.0` package; Ruby YAML readback passed for all three workflows.
+- ODD-5 validation evidence: focused package-readiness tests passed 11/11; `npm test` passed 49/49; `npm run build` passed; `npm run verify-pack` passed; `npm pack --dry-run --json --ignore-scripts` produced the expected 18-file `pi-session-orchestrator@0.2.0` package; Ruby syntax/readback passed for `publish.yml`, `ci.yml`, and both issue templates.
+- No local publish, tag, release, dispatch, remote-setting change, push, PR, stage, or commit was performed for this cleanup task.

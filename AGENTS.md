@@ -14,15 +14,14 @@
 - Work through a pull request into protected `main`; do not bypass required checks
   or rewrite shared history. Local identity and repository access do not authorize
   upstream mutation, publication, tags, releases, or workflow dispatch.
-- The permanent release route is `.github/workflows/publish.yml`: it is manually
-  dispatched from protected `main`, uses an annotated version tag, and publishes
-  publicly with npm OIDC/provenance and no token.
-- `.github/workflows/publish-bootstrap.yml` is a one-time route for the unregistered
-  `0.2.0` package. It accepts only annotated `v0.2.0` at current remote `main`,
-  then must be removed after trusted publishing is configured.
+- `pi-session-orchestrator@0.2.0` is published. The permanent release route is
+  `.github/workflows/publish.yml`: it is manually dispatched from protected `main`,
+  uses an annotated version tag, targets the GitHub Actions `npm` environment so
+  releases appear as deployments, and publishes publicly with npm
+  OIDC/provenance and no token.
 - Never publish to npm locally. Do not put npm credentials, tokens, token-bearing
-  configuration, or secrets in repository files. The bootstrap credential belongs
-  only in the protected GitHub secret and workflow runtime.
+  configuration, or secrets in repository files. Trusted publishing is configured
+  externally for the permanent GitHub Actions workflow.
 
 ## Project skill
 

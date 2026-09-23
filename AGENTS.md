@@ -14,16 +14,10 @@
 - Work through a pull request into protected `main`; do not bypass required checks
   or rewrite shared history. Local identity and repository access do not authorize
   upstream mutation, publication, tags, releases, or workflow dispatch.
-- `pi-session-orchestrator@0.2.0` is published. The permanent release route is
-  `.github/workflows/publish.yml`: it is manually dispatched from protected `main`,
-  uses an annotated version tag, targets the GitHub Actions `npm` environment so
-  releases appear as deployments, and publishes publicly with npm
-  OIDC/provenance and no token.
+- Use the permanent `.github/workflows/publish.yml` route for releases. It is
+  manually dispatched from protected `main`, requires an annotated version tag,
+  targets the GitHub Actions `npm` environment so releases appear as deployments,
+  and publishes publicly with npm OIDC/provenance and no token.
 - Never publish to npm locally. Do not put npm credentials, tokens, token-bearing
   configuration, or secrets in repository files. Trusted publishing is configured
   externally for the permanent GitHub Actions workflow.
-
-## Project skill
-
-- `.pi/skills/create-release/SKILL.md` is intentionally ignored local guidance for
-  release agents; follow it without adding the skill to the package or repository.

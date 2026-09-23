@@ -166,10 +166,21 @@ test("publish workflow is main-bound, tag-safe, and tokenless", () => {
   assert.ok(workflow.indexOf("npm pack --dry-run") < workflow.indexOf("npm publish"));
 });
 
-test("bootstrap workflow is absent and permanent release remains trusted and tag-safe", () => {
-  assert.equal(existsSync(join(root, ".github/workflows/publish-bootstrap.yml")), false);
+test("local state is ignored while tracked guidance protects the permanent release policy", () => {
+  const gitignore = read(".gitignore");
+  assert.match(gitignore, /^\.pi\/$/m);
+  assert.match(gitignore, /^odd\/$/m);
+  assert.doesNotMatch(gitignore, /!\.pi|!odd/);
+
+  const guidance = read("AGENTS.md");
+  assert.match(guidance, /protected `main`/);
+  assert.match(guidance, /`npm` environment/);
+  assert.match(guidance, /OIDC\/provenance/);
+  assert.doesNotMatch(guidance, /create-release|odd\/|\.pi\//);
+  assert.doesNotMatch(guidance, /NPM_TOKEN|NODE_AUTH_TOKEN|\.npmrc|npm token|_authToken|npm config set/i);
 
   const permanentWorkflow = read(".github/workflows/publish.yml");
+  assert.equal(existsSync(join(root, ".github/workflows/publish-bootstrap.yml")), false);
   assert.match(permanentWorkflow, /workflow_dispatch:/);
   assert.match(permanentWorkflow, /if: github\.ref == 'refs\/heads\/main'\n    runs-on: ubuntu-latest\n    environment: npm/);
   assert.equal(permanentWorkflow.match(/^    environment: npm$/gm)?.length, 1);
@@ -182,19 +193,6 @@ test("bootstrap workflow is absent and permanent release remains trusted and tag
   assert.match(permanentWorkflow, /npm publish --provenance/);
   assert.match(permanentWorkflow, /registry=https:\/\/registry\.npmjs\.org/);
   assert.doesNotMatch(permanentWorkflow, /NPM_TOKEN|NPM_BOOTSTRAP_TOKEN|NODE_AUTH_TOKEN|secrets\.|npm token|_authToken/);
-
-  const releaseSkill = read(".pi/skills/create-release/SKILL.md");
-  assert.match(releaseSkill, /permanent OIDC\/provenance workflow/);
-  assert.match(releaseSkill, /pi-session-orchestrator@0\.2\.0 is published/);
-  assert.match(releaseSkill, /Never publish locally/);
-  assert.match(read("AGENTS.md"), /`npm` environment/);
-  assert.match(releaseSkill, /`npm` environment/);
-  assert.match(read("odd/tasks/first-release-bootstrap.md"), /`npm` environment/);
-  for (const path of ["AGENTS.md", "odd/tasks/first-release-bootstrap.md"]) {
-    const guidance = read(path);
-    assert.doesNotMatch(guidance, /NPM_BOOTSTRAP_TOKEN|NPM_TOKEN|NODE_AUTH_TOKEN|\.npmrc|npm token|_authToken|npm config set/i);
-  }
-  assert.doesNotMatch(releaseSkill, /NPM_BOOTSTRAP_TOKEN|NPM_TOKEN|NODE_AUTH_TOKEN|\.npmrc|npm token|_authToken|npm config set/i);
 });
 
 test("workflow is local validation only and keeps checks ordered", () => {

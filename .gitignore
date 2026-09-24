@@ -1,11 +1,7 @@
 # Dependencies and local metadata
 node_modules/
 .DS_Store
-# Local Pi runtime state
+# Local agent and task state
 .atl/
-.pi/*
-!.pi/skills/
-.pi/skills/*
-!.pi/skills/create-release/
-.pi/skills/create-release/*
-!.pi/skills/create-release/SKILL.md
+.pi/
+odd/
